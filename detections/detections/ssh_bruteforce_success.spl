@@ -1,0 +1,10 @@
+
+index=soc_lab sourcetype="linux:auth"
+("Failed password" OR "Accepted password")
+| rex field=_raw "(?:Failed|Accepted) password for (?:invalid user )?(?<username>\S+) from (?<src_ip>\d{1,3}(?:\.\d{1,3}){3})"
+| eval status=if(match(_raw,"Accepted password"),"SUCCESS","FAILED")
+| sort 0 src_ip _time
+| streamstats time_window=10m count(eval(status="FAILED")) AS prior_failures BY src_ip
+| where status="SUCCESS" AND prior_failures>=5
+| table _time src_ip username prior_failures status
+| rename username AS successful_username
