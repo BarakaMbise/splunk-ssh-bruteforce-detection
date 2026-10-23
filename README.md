@@ -34,7 +34,7 @@ During the controlled simulation, Splunk identified:
 - **Targeted invalid username:** `fakeuser`
 - **Successful login username:** `bless`
 - **Observed behavior:** Multiple failed SSH authentication attempts followed by a successful login from the same source IP.
-- **Detection threshold:** Five or more failed logins within a 10-minute correlation window.
+- **Detection thresholds:** The standalone brute-force search flags five or more failures from one source IP in a 5-minute bucket; the correlation search flags a successful login preceded by at least five failures from the same source IP within 10 minutes.
 
 The simulation demonstrated how a SOC analyst can correlate authentication events to identify potentially suspicious access.
 
@@ -71,9 +71,7 @@ The investigation also examined session activity and available evidence of post-
 
 ## Project Status
 
-Completed controlled SSH authentication simulation, log investigation, Splunk dashboard, and alert configuration.
-
-Additional detection queries, investigation documentation, and sanitized screenshots will be added to this repository.
+Completed the controlled SSH authentication simulation, Splunk dashboard, scheduled alert, SPL detection queries, investigation report, and evidence screenshots. All four screenshots below are authentic captures from the lab.
 
 ---
 
@@ -110,6 +108,13 @@ Ubuntu journal logs independently confirmed the failed authentication attempts, 
 Read the complete investigation report:
 
 [SSH Brute-Force Incident Investigation](investigation/ssh_bruteforce_investigation.md)
+
+## Detection Logic and Limitations
+
+- **Brute-force query:** Counts `Failed password` events per source IP in fixed 5-minute time buckets and flags buckets with at least five failures.
+- **Success correlation:** Finds `Accepted password` events with at least five preceding `Failed password` events from the same source IP within a 10-minute lookback. It is an investigation lead, not proof of compromise.
+- **Tuning considerations:** Fixed buckets can split bursts across boundaries. Shared IPs/NAT, authorized testing, and multiple accounts can create false positives. The example searches cover password-based SSH messages and do not comprehensively detect all authentication methods.
+- **Lab scope:** The source IP is private and the login was intentionally authorized. The screenshots show searches from different time ranges, so counts can differ between panels.
 
 ## Detection Queries
 
